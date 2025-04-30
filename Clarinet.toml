@@ -8,6 +8,10 @@ requirements = []
 path = "contracts/token-registry.clar"
 depends_on = []
 
+[contracts.token-synchronizer]
+path = "contracts/token-synchronizer.clar"
+depends_on = []
+
 [repl]
 costs_version = 2
 parser_version = 2
