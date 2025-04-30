@@ -12,6 +12,10 @@ depends_on = []
 path = "contracts/event-tracker.clar"
 depends_on = []
 
+[contracts.token-adapter]
+path = "contracts/token-adapter.clar"
+depends_on = []
+
 [contracts.token-registry]
 path = "contracts/token-registry.clar"
 depends_on = []
