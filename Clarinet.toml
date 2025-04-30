@@ -8,6 +8,10 @@ requirements = []
 path = "contracts/auth-manager.clar"
 depends_on = []
 
+[contracts.event-tracker]
+path = "contracts/event-tracker.clar"
+depends_on = []
+
 [contracts.token-registry]
 path = "contracts/token-registry.clar"
 depends_on = []
