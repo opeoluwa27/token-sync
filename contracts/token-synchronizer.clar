@@ -60,15 +60,6 @@
     true
     false))
 
-;; Generate a unique sync ID based on transaction properties
-(define-private (generate-sync-id)
-  (concat 
-    (concat 
-      (hash160 (concat (unwrap-panic (to-consensus-buff? tx-sender)) 
-      (unwrap-panic (to-consensus-buff? block-height))))
-    (unwrap-panic (to-consensus-buff? burn-block-height)))
-    (unwrap-panic (to-consensus-buff? (get-block-info? id-header-hash u0)))))
-
 ;; Check if token is registered in the system
 (define-private (is-token-registered (token-id (string-ascii 32)))
   (is-some (map-get? token-contracts { token-id: token-id })))
@@ -158,34 +149,6 @@
     (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
     (map-delete authorized-operators operator)
     (ok true)))
-
-;; Initiate a token synchronization process
-(define-public (initiate-sync 
-                (primary-token (string-ascii 32)) 
-                (secondary-token (string-ascii 32)) 
-                (amount uint))
-  (let
-    ((sync-id (generate-sync-id))
-     (pair-details (map-get? token-sync-pairs { primary-token: primary-token, secondary-token: secondary-token })))
-    
-    ;; Validate the request
-    (asserts! (is-token-registered primary-token) ERR-TOKEN-NOT-REGISTERED)
-    (asserts! (is-token-registered secondary-token) ERR-TOKEN-NOT-REGISTERED)
-    (asserts! (is-some pair-details) ERR-INVALID-TOKEN-PAIR)
-    (asserts! (get enabled (unwrap-panic pair-details)) ERR-INVALID-TOKEN-PAIR)
-    (asserts! (> amount u0) ERR-INVALID-AMOUNT)
-    
-    ;; Record the sync operation
-    (map-set sync-operations
-      { sync-id: sync-id }
-      { initiator: tx-sender, 
-        primary-token: primary-token, 
-        secondary-token: secondary-token, 
-        amount: amount, 
-        status: "PENDING", 
-        initiated-at: block-height })
-    
-    (ok sync-id)))
 
 ;; Execute a synchronization operation
 (define-public (execute-sync (sync-id (string-ascii 64)))

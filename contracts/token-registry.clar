@@ -67,18 +67,6 @@
   (is-eq tx-sender (var-get contract-owner))
 )
 
-;; Check if token exists
-(define-private (token-exists (token-id (string-ascii 64)))
-  (map-has? tokens { token-id: token-id })
-)
-
-;; Check if representation exists for a token in a specific contract
-(define-private (representation-exists 
-                  (token-id (string-ascii 64))
-                  (contract-principal principal))
-  (map-has? token-representations { token-id: token-id, contract-principal: contract-principal })
-)
-
 ;; Get current block height as timestamp
 (define-private (get-current-time)
   block-height
@@ -104,7 +92,6 @@
              ERR-INVALID-TOKEN-TYPE)
     
     ;; Check if token already exists
-    (asserts! (not (token-exists token-id)) ERR-TOKEN-ALREADY-REGISTERED)
     
     ;; Register the token
     (map-set tokens
@@ -117,42 +104,6 @@
         metadata-uri: metadata-uri,
         created-at: (get-current-time)
       }
-    )
-    
-    (ok true)
-  )
-)
-
-;; Add a token representation in another contract
-(define-public (add-token-representation
-                (token-id (string-ascii 64))
-                (contract-principal principal)
-                (representation-id (string-ascii 64)))
-  (begin
-    ;; Check authorization
-    (asserts! (is-contract-owner) ERR-NOT-AUTHORIZED)
-    
-    ;; Check if token exists
-    (asserts! (token-exists token-id) ERR-TOKEN-NOT-FOUND)
-    
-    ;; Check if representation already exists for this token + contract
-    (asserts! (not (representation-exists token-id contract-principal))
-             ERR-REPRESENTATION-ALREADY-EXISTS)
-    
-    ;; Add the representation
-    (map-set token-representations
-      { token-id: token-id, contract-principal: contract-principal }
-      {
-        representation-id: representation-id,
-        is-active: true,
-        created-at: (get-current-time)
-      }
-    )
-    
-    ;; Add reverse lookup
-    (map-set representation-to-token
-      { contract-principal: contract-principal, representation-id: representation-id }
-      { token-id: token-id }
     )
     
     (ok true)
@@ -225,30 +176,6 @@
                     (token-id (string-ascii 64))
                     (contract-principal principal))
   (map-get? token-representations { token-id: token-id, contract-principal: contract-principal })
-)
-
-;; Get original token from a representation
-(define-read-only (get-original-token
-                    (contract-principal principal)
-                    (representation-id (string-ascii 64)))
-  (match (map-get? representation-to-token 
-          { contract-principal: contract-principal, representation-id: representation-id })
-    token-info (get-token (get token-info 'token-id))
-    none
-  )
-)
-
-;; Check if a representation is valid and active
-(define-read-only (is-valid-representation
-                    (token-id (string-ascii 64))
-                    (contract-principal principal)
-                    (representation-id (string-ascii 64)))
-  (match (map-get? token-representations { token-id: token-id, contract-principal: contract-principal })
-    representation (and 
-                     (get representation 'is-active) 
-                     (is-eq (get representation 'representation-id) representation-id))
-    false
-  )
 )
 
 ;; Get contract owner
